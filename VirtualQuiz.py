@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# Version 0.05 2020-05-22
 import pygame
 import random
 from res.CardClass import CardImg, card_dirs
