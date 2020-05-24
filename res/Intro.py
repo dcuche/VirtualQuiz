@@ -69,7 +69,7 @@ def wait(screen, server):
 				elif server.State != event.state:
 					server.State = event.state
 					server.PLAYERS = event.players
-					server.P_STATUS = event.pstats
+					server.P_STATUS = event.pstatus
 					print(event)
 
 	screen.fill((0, 0, 0))

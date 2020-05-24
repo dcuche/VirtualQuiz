@@ -15,7 +15,7 @@ class Network(threading.Thread):
     HEADER = 4096
     DISCON_MESSAGE = 'CHAITO'
     JOIN_PASS = 'VQ4000'
-    MIN_LAT = 100
+    MIN_LAT = 50
 
     def __init__(self):
         threading.Thread.__init__(self)

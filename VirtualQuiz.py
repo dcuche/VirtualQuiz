@@ -4,7 +4,7 @@ import pygame
 import random
 from res.CardClass import CardImg, card_dirs
 from res.network import Network, NetworkEvents
-from res.QuizGame import GameActions as GA
+from res.QuizGame import GameActions as GA, GameStates as GS
 
 server = Network()
 
@@ -179,7 +179,6 @@ while running:
                 server.postAction = GA.NEW_PLAYER_STATUS
                 playerStatus = 2 if playerStatus == 0 else 0
                 server.Message = {'pstatus': playerStatus}
-                server.State = 'GORILAS'
                 #server.send({'pID': server.id, 'state': server.State, 'orig': 'INPUT'})
                 #pygame.mixer.music.stop()
                 #pygame.mixer.music.load(theme)
@@ -196,17 +195,15 @@ while running:
         if event.type == NetworkEvents.CLIENT_MESSAGE:
             cur_lat = event.lat
 
-            if event.subject != 'IDLE':
+            if event.subject != GA.IDLE:
                 print('VQ:', event)
 
-            if event.subject in ('N_PLAYER', 'N_PSTAT'):
-                server.P_STATUS = event.pstats
+            if event.subject in (GA.NEW_PLAYER, GA.NEW_PLAYER_STATUS):
+                server.P_STATUS = event.pstatus
                 PlayerList(event.players)       # AGREGO NUEVOS JUGADORES!
-            elif event.subject == 'N_PSTAT':
-                pass
             elif event.subject == 'D_PLAYER':
                 pass
-            elif event.subject == 'N_STATE':
+            elif event.subject == GA.NEW_GAME_STATE:
                 server.State = event.state
 
             if event.state == 'GORILAS' and gameStart == False:
