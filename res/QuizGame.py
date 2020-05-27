@@ -59,6 +59,19 @@ class Quiz:
         self.Round = 0
         # self.deck = Deck()
 
+    def CurrentMessage(self,player):
+        message = {}
+        action = self.getAction(player.id)
+        message['subject'] = action
+        message['lat'] = player.latClick()
+        message['state'] = self.State
+        if action == GameActions.NEW_PLAYER or action == GameActions.NEW_PLAYER_STATUS:
+            players, pstats = self.getPlayers()
+            message['players'] = players
+            message['pstatus'] = pstats
+
+        return message
+
     def addPlayer(self,addr,name):
         player = Player(name,self.totPlayers,addr)
         self.Players.append(player)
@@ -67,11 +80,8 @@ class Quiz:
         return player
 
     def getPlayers(self):
-        pnames = []
-        pstats = []
-        for player in self.Players:
-            pnames.append(player.name)
-            pstats.append(player.stat)
+        pnames = [player.name for player in self.Players]
+        pstats = [player.stat for player in self.Players]
         return pnames, pstats
 
     def playerMove(self,id,data):
@@ -82,7 +92,6 @@ class Quiz:
     def addAction(self,subject):
         for player in self.Players:
             self.Actions[player.id].append(subject)
-
 
     def getAction(self,id):
         return self.Actions[id].pop() if len(self.Actions[id]) else GameActions.IDLE

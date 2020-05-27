@@ -9,7 +9,7 @@ pausa = 30
 intro_pausa = 30
 slowpace = 20
 
-#pausa = intro_pausa = slowpace = 1
+pausa = intro_pausa = slowpace = 1
 
 tiping = pygame.mixer.Sound('res/sfx/typed')
 deling = pygame.mixer.Sound('res/sfx/deled')
@@ -63,8 +63,9 @@ def wait(screen, server):
 						empty_channel.play(tiping)
 		elif stat == 'connecting':
 			if event.type == NetworkEvents.CLIENT_MESSAGE:
+				#print('Tengo en INTRO:',event)
 				if not event.subject:
-					print('BUUU! No hay conexion!!')
+					print('> NO HAY CONEXION! :D')
 					server.State = False
 				elif server.State != event.state:
 					server.State = event.state

@@ -1,4 +1,5 @@
-from pygame import Surface, font, image
+from pygame import Surface, font, image, Rect
+from res.CardClass import CardImg, card_dirs
 
 palete = {'consol_w' : (243,243,243),
           'rojo' : (171,82,54),
@@ -20,7 +21,7 @@ FPS = 60
 
 PLAYER_TITLE = 40
 PLAYER_H = 300
-ENEMI_H = PLAYER_H 
+ENEMI_H = PLAYER_H
 MAZO_H = WIN_DIM[1] - PLAYER_H - ENEMI_H - PLAYER_TITLE
 MAZO_W = int(WIN_DIM[0] / 3)
 
@@ -29,7 +30,8 @@ MAZO_X = int((MAZO_W-4*OL_H-2*CARD_DIM[0]-M_SEP)/2)
 f1_s = 'res/8-bit-pusab'
 
 
-def getBoard(n_enem):
+def getBoard(lenPlay):
+    n_enem = lenPlay - 1
     Board = {}
     for i in range(n_enem):
         Board['player' + str(i + 1)] = {'size': (int(WIN_W / n_enem), PLAYER_H),
@@ -43,6 +45,16 @@ def getBoard(n_enem):
                      'pos': (MAZO_W, PLAYER_H + PLAYER_TITLE)}
     return Board
 
+
+def GetBack():
+    back = CardImg(card_dirs[0],0)
+
+    backCent = back.image.get_rect()
+    backCent.center = tuple(map(sum, zip((MAZO_W/2, MAZO_H/2), (MAZO_W, PLAYER_H + PLAYER_TITLE))))
+    backCent[1] += 2
+    mazo_start_pos = [MAZO_X+MAZO_W, backCent[1]] # backCent[:2]
+    back.pos(mazo_start_pos,[WIN_W, backCent[1]])
+    return back
 
 class WaitIcon:
 

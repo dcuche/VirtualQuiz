@@ -18,24 +18,32 @@ server.bind(ADDR)
 quiz = Quiz()
 
 def handle_client(CONN,addr):
-    pname = pickle.loads(CONN.recv(HEADER))
-    print(f'[CONECCION NUEVA] {pname} conectado desde {addr}!')
+    connect_resp = pickle.loads(CONN.recv(HEADER))
+    c_pass = connect_resp['JOIN_PASS'] if 'JOIN_PASS' in connect_resp else ''
+    if c_pass != JOIN_PASS:
+        CONN.send(pickle.dumps({'result':False, 'mess':-1}))
+        print(f'[RECHAZO] {addr} - NO PASSWORD')
+        CONN.close()
+        return
+    if quiz.State != GS.WAITING_PLAYERS:
+        CONN.send(pickle.dumps({'result':False, 'mess':quiz.State}))
+        print(f'[RECHAZO] {addr} - GAME STATE: {quiz.State}')
+        CONN.close()
+        return
+
+    pname = connect_resp['USER_NAME']
     player = quiz.addPlayer(addr,pname)
-    CONN.send(pickle.dumps(player.id))
+
+    print(f'[CONECCION NUEVA] ({player.id}) "{pname}" conectado desde {addr}!')
+    CONN.send(pickle.dumps({'result':True, 'mess':player.id}))
+
     quiz.addAction(GA.NEW_PLAYER)
-    print(f' > Tengo hasta ahora {len(quiz.Players)} jugadores, y mi estado es {quiz.State}')
+    print(f' > Tengo {len(quiz.Players)} jugadores, y mi estado es {quiz.State}')
 
     connected = True
     while connected:
         try:
-            message = {}
-            message['subject'] = quiz.getAction(player.id)
-            message['lat'] = player.latClick()
-            message['state'] = quiz.State
-            if message['subject'] == GA.NEW_PLAYER or message['subject'] == GA.NEW_PLAYER_STATUS:
-                players, pstats = quiz.getPlayers()
-                message['players'] = players
-                message['pstatus'] = pstats
+            message = quiz.CurrentMessage(player)
             CONN.send(pickle.dumps(message))
             data = pickle.loads(CONN.recv(HEADER))
             if data['action'] != GA.IDLE:
@@ -44,13 +52,12 @@ def handle_client(CONN,addr):
         except:
             print(player.id,'ERROR CONECTING PLAYER')
             quiz.Players.remove(player)
-            quiz.addAction('N_PLAYER')
+            quiz.addAction(GA.NEW_PLAYER)
             connected = False
 
-
-    print(f'[CONECCION TERMINADA] Jugador {player.id} {addr} se fue pa la casa!')
+    print(f'[CONECCION TERMINADA] Jugador ({player.id}) "{player.name}" de {addr}!')
     if len(quiz.Players) == 0:
-        quiz.State = 'W_PLAYERS'
+        quiz.State = GS.WAITING_PLAYERS
         print(f'[CAMBIO ESTADO] a {quiz.State}')
     CONN.close()
 

@@ -4,7 +4,7 @@ import enum
 import socket
 from time import sleep
 import pickle
-from res.QuizGame import GameActions as GA
+from res.QuizGame import GameActions as GA, GameStates as GS
 
 class NetworkEvents(enum.IntEnum):
     CLIENT_CONNECTED = USEREVENT + 1
@@ -13,15 +13,20 @@ class NetworkEvents(enum.IntEnum):
 
 class Network(threading.Thread):
     HEADER = 4096
+    SERVERS = [
+                '175.193.206.200',  # ROBOTO KOREA
+                '69.163.163.192'    # DREAMHOST USA
+              ]
+    ACTIVE_SERVER = 1
+    PORT = 8792
     DISCON_MESSAGE = 'CHAITO'
     JOIN_PASS = 'VQ4000'
-    MIN_LAT = 50
+    MIN_LAT = 10
 
     def __init__(self):
         threading.Thread.__init__(self)
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.SERVER = '175.193.206.200'
-        self.PORT = 8792
+        self.SERVER = self.SERVERS[self.ACTIVE_SERVER]
         self.ADDR = (self.SERVER, self.PORT)
         self.id = -1
         self.State = ''
@@ -36,11 +41,12 @@ class Network(threading.Thread):
         if self.id == -1:
             self.pgPost({"subject": False})
             return
-
+        print(f'[COENCTADO] id: {self.id}')
         while self.id > -1:
             data = self.receive()
             self.pgPost(data)
-
+            self.MIN_LAT = (100 - data['lat']) if (100 - data['lat']) > 10 else 10
+            # INFLATED LATENCY
             sleep(self.MIN_LAT/1000)
 
             self.send({'pID': self.id, 'action': self.postAction, 'state': self.State, 'mess': self.Message})
@@ -55,10 +61,17 @@ class Network(threading.Thread):
     def connect(self):
         try:
             self.client.connect(self.ADDR)
-            self.client.send(pickle.dumps(self.pname))
+            self.client.send(pickle.dumps({'JOIN_PASS':self.JOIN_PASS,'USER_NAME':self.pname}))
             print('> Conectandose a VirtualQuiz Services...')
-            self.State = 'SIGNING'
-            self.id = pickle.loads(self.client.recv(self.HEADER))
+            resp = pickle.loads(self.client.recv(self.HEADER))
+            print('[RESPUESTA SERVIDOR]',resp)
+            if not resp['result']:
+                if resp['mess'] < 0:
+                    return -2
+                else:
+                    self.State = resp['mess']
+                    return -3
+            self.id = resp['mess']
             return self.id
         except socket.error as e:
             print(e)

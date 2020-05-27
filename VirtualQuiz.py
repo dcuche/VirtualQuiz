@@ -8,12 +8,7 @@ from res.QuizGame import GameActions as GA, GameStates as GS
 
 server = Network()
 
-gameState = ''
-
 cur_lat = 0
-Players = []
-
-numEnem = 1
 
 """ ############################################################## """
 fpsClock = pygame.time.Clock()
@@ -61,22 +56,20 @@ gameCont = pygame.Surface(WIN_DIM)
 theme = 'res/sfx/intr_f'
 pygame.mixer.music.load('res/sfx/mars_full')
 
-Board = getBoard(numEnem)
+Board = getBoard(len(server.PLAYERS))
 """ ############################################################## """
-cards = []
-back = CardImg(card_dirs[0],0)
 
-backCent = back.image.get_rect()
-backCent.center = tuple(map(sum, zip(Board['mazo']['surf'].get_rect().center, Board['mazo']['pos'])))
-backCent[1] += 2
-mazo_start_pos = [MAZO_X+MAZO_W, backCent[1]] # backCent[:2]
-back.pos(mazo_start_pos,[WIN_W, backCent[1]])
+back = GetBack()
+
+#deck = GetDek()
+
+cards = []
 
 for i in range(int(len(card_dirs))-1):
     newCard = card_dirs.pop(random.randint(1, len(card_dirs)-1))
     cards.append(CardImg(newCard,i))
     cards[-1].insert(WIN_W,WIN_H)
-    cards[-1].pos(mazo_start_pos)
+    cards[-1].pos(back.des_pos)
 
 def mazo():
     for card in cards:
@@ -100,7 +93,7 @@ movers.append(back)
 pygame.mixer.music.play(-1)
 
 wait_title = Title('Esperando jugadores...', 12, palete['azul'])
-wait_title.pos = [mazo_start_pos[0]+6, mazo_start_pos[1]-wait_title.tRect[3]-8]
+wait_title.pos = [back.des_pos[0]+6, back.des_pos[1]-wait_title.tRect[3]-8]
 
 BlitTexts = []
 BlitTexts.append(wait_title)
@@ -132,11 +125,11 @@ def PlayerList(nPlayers):
         if player == server.pname:
             pstat += 1
         pIcon = WaitIcon(pstat)
-        pIcon.pos = [mazo_start_pos[0] + backCent[2] + 10, mazo_start_pos[1] + i * wait_title.tRect[3]]
+        pIcon.pos = [back.des_pos[0] + CARD_DIM[0] + 10, back.des_pos[1] + i * wait_title.tRect[3]]
         BlitIcons.append(pIcon)
         pIcons.append(pIcon)
         ptitle = Title(player, 12, palete['azul'])
-        ptitle.pos = [mazo_start_pos[0] + backCent[2] + 10 + 30, mazo_start_pos[1] + i * wait_title.tRect[3]]
+        ptitle.pos = [back.des_pos[0] + CARD_DIM[0] + 10 + 30, back.des_pos[1] + i * wait_title.tRect[3]]
         pTexts.append(ptitle)
         BlitTexts.append(ptitle)
     if allReady == True and gameStart == False:
@@ -235,7 +228,7 @@ while running:
             piece['surf'].fill(palete['rojo'])
             piece['surf'].set_alpha(100)
             gameCont.blit(piece['surf'], piece['pos'])
-            #pygame.draw.rect(gameCont, palete['rojo'], pygame.Rect(piece['pos'], piece['size']))
+            pygame.draw.rect(gameCont, palete['rojo'], pygame.Rect(piece['pos'], piece['size']))
 
     for rollable in rollers:
         stat = rollable.rollOver()
